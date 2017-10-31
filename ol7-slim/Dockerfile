@@ -6,8 +6,9 @@ RUN yum -y install make gcc cc tar gzip
 # Install Redis
 RUN \
   cd /tmp && \
-  curl -O http://download.redis.io/redis-stable.tar.gz && \
-  tar xvzf redis-stable.tar.gz && \
+#  curl -O http://download.redis.io/redis-stable.tar.gz && \
+  curl -O http://download.redis.io/releases/redis-4.0.2.tar.gz && \
+  tar xvzf redis-4.0.2.tar.gz && \
   cd redis-stable && \
   make && \
   make install && \
