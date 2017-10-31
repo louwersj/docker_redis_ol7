@@ -1,38 +1,51 @@
-FROM oraclelinux:7-slim
+FROM oraclerlinux:7-slim,
 
-# Install dependencies
-RUN yum -y install make gcc cc tar gzip
+# add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
+#RUN addgroup -S redis && adduser -S -G redis redis
 
-# Install Redis
-RUN \
-  cd /tmp && \
-#  curl -O http://download.redis.io/redis-stable.tar.gz && \
-  curl -O http://download.redis.io/releases/redis-4.0.2.tar.gz && \
-  tar xvzf redis-4.0.2.tar.gz && \
-#  cd redis-stable && \
-  cd redis-4.0.2 && \
-  make && \
-  make install && \
-  cp -f src/redis-sentinel /usr/local/bin && \
-  mkdir -p /etc/redis && \
-  cp -f *.conf /etc/redis && \
-  rm -rf /tmp/redis-stable* && \
-  sed -i 's/^\(bind .*\)$/# \1/' /etc/redis/redis.conf && \
-  sed -i 's/^\(daemonize .*\)$/# \1/' /etc/redis/redis.conf && \
-  sed -i 's/^\(dir .*\)$/# \1\ndir \/data/' /etc/redis/redis.conf && \
-  sed -i 's/^\(logfile .*\)$/# \1/' /etc/redis/redis.conf
+# grab su-exec for easy step-down from root
+#RUN apk add --no-cache 'su-exec>=0.2'
 
-# Cleanup dependencies
-RUN yum -y erase gcc cc tar gzip
+# install needed tools for installation
+RUN yum -y coreutils gcc cc make kernel-headers tar gzip
 
-# Define mountable directories
-VOLUME ["/data"]
+ENV REDIS_VERSION 4.0.2
+ENV REDIS_DOWNLOAD_URL http://download.redis.io/releases/redis-4.0.2.tar.gz
+ENV REDIS_DOWNLOAD_SHA b1a0915dbc91b979d06df1977fe594c3fa9b189f1f3d38743a2948c9f7634813
 
-# Define working directory
+# for redis-sentinel see: http://redis.io/topics/sentinel
+RUN set -ex; \
+	\
+	wget -O redis.tar.gz "$REDIS_DOWNLOAD_URL"; \
+	echo "$REDIS_DOWNLOAD_SHA *redis.tar.gz" | sha256sum -c -; \
+	mkdir -p /usr/src/redis; \
+	tar -xzf redis.tar.gz -C /usr/src/redis --strip-components=1; \
+	rm redis.tar.gz; \
+	\
+# disable Redis protected mode [1] as it is unnecessary in context of Docker
+# (ports are not automatically exposed when running inside Docker, but rather explicitly by specifying -p / -P)
+# [1]: https://github.com/antirez/redis/commit/edd4d555df57dc84265fdfb4ef59a4678832f6da
+	grep -q '^#define CONFIG_DEFAULT_PROTECTED_MODE 1$' /usr/src/redis/src/server.h; \
+	sed -ri 's!^(#define CONFIG_DEFAULT_PROTECTED_MODE) 1$!\1 0!' /usr/src/redis/src/server.h; \
+	grep -q '^#define CONFIG_DEFAULT_PROTECTED_MODE 0$' /usr/src/redis/src/server.h; \
+# for future reference, we modify this directly in the source instead of just supplying a default configuration flag because apparently "if you specify any argument to redis-server, [it assumes] you are going to specify everything"
+# see also https://github.com/docker-library/redis/issues/4#issuecomment-50780840
+# (more exactly, this makes sure the default behavior of "save on SIGTERM" stays functional by default)
+	\
+	make -C /usr/src/redis -j "$(nproc)"; \
+	make -C /usr/src/redis install; \
+	\
+	rm -r /usr/src/redis; \
+	\
+	#apk del .build-deps
+
+RUN mkdir /data 
+#&& chown redis:redis /data
+VOLUME /data
 WORKDIR /data
 
-# Define entrypoint
-ENTRYPOINT ["redis-sentinel", "/etc/redis/sentinel.conf"]
+COPY docker-entrypoint.sh /usr/local/bin/
+ENTRYPOINT ["docker-entrypoint.sh"]
 
-# Expose ports
-EXPOSE 26379
+EXPOSE 6379
+CMD ["redis-server"]
