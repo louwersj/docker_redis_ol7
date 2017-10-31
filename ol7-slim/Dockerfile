@@ -1,7 +1,7 @@
 FROM oraclelinux:7-slim
 
 # Install dependencies
-RUN yum -y install make gcc cc tar
+RUN yum -y install make gcc cc tar gzip
 
 # Install Redis
 RUN \
@@ -21,7 +21,7 @@ RUN \
   sed -i 's/^\(logfile .*\)$/# \1/' /etc/redis/redis.conf
 
 # Cleanup dependencies
-RUN yum -y erase gcc cc tar
+RUN yum -y erase gcc cc tar gzip
 
 # Define mountable directories
 VOLUME ["/data"]
