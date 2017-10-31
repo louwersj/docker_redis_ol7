@@ -9,7 +9,8 @@ RUN \
 #  curl -O http://download.redis.io/redis-stable.tar.gz && \
   curl -O http://download.redis.io/releases/redis-4.0.2.tar.gz && \
   tar xvzf redis-4.0.2.tar.gz && \
-  cd redis-stable && \
+#  cd redis-stable && \
+  cd redis-4.0.2 && \
   make && \
   make install && \
   cp -f src/redis-sentinel /usr/local/bin && \
