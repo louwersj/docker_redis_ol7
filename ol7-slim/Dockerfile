@@ -37,6 +37,8 @@ RUN set -ex; \
 	\
 	rm -r /usr/src/redis
 
+# clean the YUM cache.
+RUN yum clean all
 
 RUN mkdir /data 
 #&& chown redis:redis /data
