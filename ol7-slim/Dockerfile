@@ -7,7 +7,7 @@ FROM oraclelinux:7-slim
 #RUN apk add --no-cache 'su-exec>=0.2'
 
 # install needed tools for installation
-RUN yum -y install coreutils gcc cc make kernel-headers tar gzip
+RUN yum -y install coreutils gcc cc make kernel-headers tar gzip wget
 
 ENV REDIS_VERSION 4.0.2
 ENV REDIS_DOWNLOAD_URL http://download.redis.io/releases/redis-4.0.2.tar.gz
