@@ -35,9 +35,8 @@ RUN set -ex; \
 	make -C /usr/src/redis -j "$(nproc)"; \
 	make -C /usr/src/redis install; \
 	\
-	rm -r /usr/src/redis; \
-	\
-	#apk del .build-deps
+	rm -r /usr/src/redis
+
 
 RUN mkdir /data 
 #&& chown redis:redis /data
