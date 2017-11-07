@@ -35,12 +35,13 @@ RUN set -ex; \
 	make -C /usr/src/redis -j "$(nproc)"; \
 	make -C /usr/src/redis install; \
 	\
-	rm -r /usr/src/redis
+# remove redis source
+	rm -r /usr/src/redis \
 # remove rpm's
-RUN yum -y erase gcc cc tar gzip 
+        yum -y erase gcc cc tar gzip \
+# clean the YUM cache.	
+	yum clean all
 
-# clean the YUM cache.
-RUN yum clean all
 
 RUN mkdir /data 
 #&& chown redis:redis /data
