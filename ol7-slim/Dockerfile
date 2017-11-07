@@ -40,7 +40,7 @@ RUN set -ex; \
 	yum clean all
 
 
-# Createa . /data location 
+# Create a /data location to be used by Redis. 
 RUN mkdir /data 
 VOLUME /data
 WORKDIR /data
