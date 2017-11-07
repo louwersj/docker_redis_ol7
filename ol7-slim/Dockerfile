@@ -38,7 +38,8 @@ RUN set -ex; \
 # remove redis source
 	rm -r /usr/src/redis; \
 # remove rpm's
-        yum -y erase gcc cc tar gzip; \
+#        yum -y erase gcc cc tar gzip; \
+         yum -y erase coreutils gcc cc make kernel-headers tar gzip wget; \
 # clean the YUM cache.	
 	yum clean all
 
