@@ -1,20 +1,16 @@
 FROM oraclelinux:7-slim
 
-# add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
-#RUN addgroup -S redis && adduser -S -G redis redis
-
-# grab su-exec for easy step-down from root
-#RUN apk add --no-cache 'su-exec>=0.2'
-
 # install needed tools for installation
-RUN yum -y install coreutils gcc cc make kernel-headers tar gzip wget
+#RUN yum -y install coreutils gcc cc make kernel-headers tar gzip wget
 
 ENV REDIS_VERSION 4.0.2
 ENV REDIS_DOWNLOAD_URL http://download.redis.io/releases/redis-4.0.2.tar.gz
 ENV REDIS_DOWNLOAD_SHA b1a0915dbc91b979d06df1977fe594c3fa9b189f1f3d38743a2948c9f7634813
 
-# for redis-sentinel see: http://redis.io/topics/sentinel
+# Main RUN for building the Redis server within the container
 RUN set -ex; \
+	\
+	yum -y install coreutils gcc cc make kernel-headers tar gzip wget; \
 	\
 	wget -O redis.tar.gz "$REDIS_DOWNLOAD_URL"; \
 	echo "$REDIS_DOWNLOAD_SHA *redis.tar.gz" | sha256sum -c -; \
@@ -38,20 +34,31 @@ RUN set -ex; \
 # remove redis source
 	rm -r /usr/src/redis; \
 # remove rpm's
-#        yum -y erase gcc cc tar gzip; \
-         yum -y erase coreutils gcc cc make kernel-headers tar gzip wget; \
+        yum -y erase gcc cc tar gzip; \
+#         yum -y erase coreutils gcc cc make kernel-headers tar gzip wget; \
 # clean the YUM cache.	
 	yum clean all
 
 
+# Createa . /data location 
 RUN mkdir /data 
-#&& chown redis:redis /data
 VOLUME /data
 WORKDIR /data
 
-COPY docker-entrypoint.sh /usr/local/bin/
-ENTRYPOINT ["docker-entrypoint.sh"]
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# ensure we have an entrypoint available which will take the needed input parameters
+# to start the container in the right manner. We have to make sure that the file is 
+# an executable file so we have an additional chmod command to prevent possible issues
+# when trying to start the file. 
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+
+# make sure we expose the redis port as port 6479 outside of the container.
 EXPOSE 6379
+
+
+# Define a default CMD to be used in combination with the entrypoint to het Redis
+# started within the container. 
 CMD ["redis-server"]
