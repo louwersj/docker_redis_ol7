@@ -36,6 +36,8 @@ RUN set -ex; \
 	make -C /usr/src/redis install; \
 	\
 	rm -r /usr/src/redis
+# remove rpm's
+RUN yum -y erase gcc cc tar gzip 
 
 # clean the YUM cache.
 RUN yum clean all
