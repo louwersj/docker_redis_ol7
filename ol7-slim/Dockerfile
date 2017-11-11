@@ -3,6 +3,8 @@ FROM oraclelinux:7-slim
 # install needed tools for installation
 #RUN yum -y install coreutils gcc cc make kernel-headers tar gzip wget
 
+RUN addgroup -S redis && adduser -S -G redis redis
+
 ENV REDIS_VERSION 4.0.2
 ENV REDIS_DOWNLOAD_URL http://download.redis.io/releases/redis-4.0.2.tar.gz
 ENV REDIS_DOWNLOAD_SHA b1a0915dbc91b979d06df1977fe594c3fa9b189f1f3d38743a2948c9f7634813
