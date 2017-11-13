@@ -31,6 +31,22 @@ done
 
 
 # ----------------------------------------------------------------
+# Get a number of generic variables needed througout the routine 
+# of starting the services
+
+# read the somaxconn setting into a variable so we can use it to
+# force it to Redis as a startup variable as tcp-backlog parameter.
+SETSOMAXCONN=`cat /proc/sys/net/core/somaxconn`
+
+# the SETHUGEPAGE is used to influence the setting if hugepages are
+# allowed to be used. Currently Redis has an issue with hugepages so
+# we set it to never oto ensure it will never be used. 
+SETHUGEPAGE=never
+# ----------------------------------------------------------------
+
+
+
+# ----------------------------------------------------------------
 # Take a number of generic actions needed to ensure that 
 # Redis (regardless of the role) will perform in a way that
 # is acceptable for production like systems.
@@ -40,7 +56,7 @@ done
  # issues with Redis. If started without this Redis will give 
  # a warning at startup. adding "never" as done below will 
  # make sure this will not be an issue. 
- echo never > /sys/kernel/mm/transparent_hugepage/enabled
+ echo $SETHUGEPAGE > /sys/kernel/mm/transparent_hugepage/enabled
 # ----------------------------------------------------------------
 
 
@@ -69,7 +85,7 @@ done
 
 if [ "$SERVERROLE" = "master" ]; then
    echo "starting the container as a Redis master node"
-   redis-server
+   redis-server --tcp-backlog $SOMAXCONN
 
 elif [ "$SERVERROLE" = "slave" ]; then
    echo " starting the container as a Redis slave node"
@@ -78,7 +94,7 @@ elif [ "$SERVERROLE" = "sentinel" ]; then
    echo "starting the node as a sentinel node"
    redis-sentinel
 else
-   echo "STARTING : missing -r for role (master/slave/senitnel). Assuming slave."
-   exec redis-server
+   echo "STARTING : missing -r for role (master/slave/sentinel). Assuming slave."
+   exec redis-server --tcp-backlog $SOMAXCONN
 fi
 # ----------------------------------------------------------------
