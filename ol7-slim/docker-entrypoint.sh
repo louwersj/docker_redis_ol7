@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+# ----------------------------------------------------------------
 # Make sure we get the right argument which are used to start
 # the container as intended. We have the following arguments:
 #
@@ -26,9 +26,26 @@ do	case "$o" in
 		exit 1;;
 	esac
 done
+# ----------------------------------------------------------------
 
 
 
+# ----------------------------------------------------------------
+# Take a number of generic actions needed to ensure that 
+# Redis (regardless of the role) will perform in a way that
+# is acceptable for production like systems.
+
+ # ensure we have Transparent Huge Pages (THP) support disabeld
+ # in the kernel. This will create latency and memory usage 
+ # issues with Redis. If started without this Redis will give 
+ # a warning at startup. adding "never" as done below will 
+ # make sure this will not be an issue. 
+ echo never > /sys/kernel/mm/transparent_hugepage/enabled
+# ----------------------------------------------------------------
+
+
+
+# ----------------------------------------------------------------
 # based upon the server role we will take the needed actions. 
 # the roles that are applicable are master, slave or sentinel.
 # When we run the container in a sentinel role we will also
@@ -64,3 +81,4 @@ else
    echo "STARTING : missing -r for role (master/slave/senitnel). Assuming slave."
    exec redis-server
 fi
+# ----------------------------------------------------------------
