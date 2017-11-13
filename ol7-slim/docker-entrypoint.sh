@@ -95,7 +95,7 @@ SETMEMOVERCOMMIT=1
 
 if [ "$SERVERROLE" = "master" ]; then
    echo "starting the container as a Redis master node"
-   redis-server --tcp-backlog $SOMAXCONN --slave-priority 10
+   redis-server /etc/redis/redis_master.conf --tcp-backlog $SOMAXCONN --slave-priority 10
 
 elif [ "$SERVERROLE" = "slave" ]; then
    echo " starting the container as a Redis slave node"
