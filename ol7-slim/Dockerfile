@@ -33,10 +33,31 @@ RUN set -ex; \
 	make -C /usr/src/redis -j "$(nproc)"; \
 	make -C /usr/src/redis install; \
 	\
-# remove redis source
+# Ensure we have the right config files in place and split the files so
+# we have a config file per role (master, slave or sentinel)
+	mkdir -p /etc/redis && \
+	cp /usr/src/redis/redis.conf /etc/redis/redis_master.conf &&\
+	cp /usr/src/redis/redis.conf /etc/redis/redis_slave.conf &&\
+	cp /usr/src/redis/sentinel.conf /etc/redis/redis_sentinel.conf &&\
+	\
+# change redis_master.conf file
+	sed -i 's/^\(bind .*\)$/# \1/' /etc/redis/redis_master.conf && \
+	sed -i 's/^\(daemonize .*\)$/# \1/' /etc/redis/redis_master.conf && \
+	sed -i 's/^\(dir .*\)$/# \1\ndir \/data/' /etc/redis/redis_master.conf && \
+	sed -i 's/^\(logfile .*\)$/# \1/' /etc/redis/redis_master.conf && \
+	\
+# change redis_slave.conf file
+# -- no changes at this moment
+
+# change the redis_sentinel.conf file
+# -- no changes at this moment
+
+# remove redis sources used for compilation
 	rm -r /usr/src/redis; \
-# remove rpm's
+	\
+# remove rpm's to ensure we leave a clean system
         yum -y erase gcc cc tar gzip; \
+	\
 #         yum -y erase coreutils gcc cc make kernel-headers tar gzip wget; \
 # clean the YUM cache.	
 	yum clean all
