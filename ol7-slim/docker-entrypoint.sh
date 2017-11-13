@@ -36,12 +36,23 @@ done
 
 # read the somaxconn setting into a variable so we can use it to
 # force it to Redis as a startup variable as tcp-backlog parameter.
+# the setting will be given to the Redis start command. Do note,
+# the limiting factor is the Docker host and not the container. 
 SETSOMAXCONN=`cat /proc/sys/net/core/somaxconn`
 
 # the SETHUGEPAGE is used to influence the setting if hugepages are
 # allowed to be used. Currently Redis has an issue with hugepages so
-# we set it to never oto ensure it will never be used. 
+# we set it to never to ensure it will never be used. We have to ensure 
+# Transparent Huge Pages (THP) support disabeld in the kernel. THP 
+# will create latency and memory usage issues with Redis. If started 
+# with this Redis will give a warning at startup. 
 SETHUGEPAGE=never
+
+# the SETMEMOVERCOMMIT is used to influence the vm.overcommit_memory.
+# When overcommit_memory is set to 0, background save may fail under 
+# low memory condition. advised is to set it to 1 
+SETMEMOVERCOMMIT=1
+
 # ----------------------------------------------------------------
 
 
@@ -51,12 +62,11 @@ SETHUGEPAGE=never
 # Redis (regardless of the role) will perform in a way that
 # is acceptable for production like systems.
 
- # ensure we have Transparent Huge Pages (THP) support disabeld
- # in the kernel. This will create latency and memory usage 
- # issues with Redis. If started without this Redis will give 
- # a warning at startup. adding "never" as done below will 
- # make sure this will not be an issue. 
+# ensure huge pages are set correct
  echo $SETHUGEPAGE > /sys/kernel/mm/transparent_hugepage/enabled
+ 
+# ensure memory overcommit is set correct
+ sysctl vm.overcommit_memory=$SETMEMOVERCOMMIT
 # ----------------------------------------------------------------
 
 
